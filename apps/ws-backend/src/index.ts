@@ -5,7 +5,7 @@ import { JWT_SECRET } from "@repo/backend-common/config";
 const wss = new WebSocketServer({ port: 8080 });
 console.log("WebSocket server listening on ws://localhost:8080");
 
-wss.on("connection", (ws: WebSocket & { userId: userId } & { url: string }) => {
+wss.on("connection", (ws: WebSocket & { userId: string } & { url: string }) => {
   const url = ws.url;
   if(!url){
     ws.close();
@@ -18,7 +18,7 @@ wss.on("connection", (ws: WebSocket & { userId: userId } & { url: string }) => {
     return;
   }
   const decoded = jwt.verify(token, JWT_SECRET) as jwt.JwtPayload;
-  if (!decoded) {
+  if (!decoded || typeof decoded.userId !== 'string') {
     ws.close();
     return;
   }

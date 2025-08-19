@@ -1,6 +1,6 @@
 
 declare global {
-    type userId = object;
+    type userId = string;
     namespace Express {
       interface Request {
         userId?: userId;
