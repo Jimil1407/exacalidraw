@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "./config";
+import { authMiddleware } from "./middleware";
 
 const app = express();
 
@@ -27,7 +28,7 @@ app.post("/signin", async (req: Request, res: Response) => {
   res.status(200).json({ token });
 });
 
-app.post("/create-room", (req: Request, res: Response) => {
+app.post("/create-room", authMiddleware, (req: Request, res: Response) => {
   res.send("Hello World");
 });
 
