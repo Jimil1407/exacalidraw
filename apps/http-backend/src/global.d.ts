@@ -1,16 +1,18 @@
+import "express";
+import "jsonwebtoken";
 
 declare global {
-    type userId = string;
-    namespace Express {
-      interface Request {
-        userId?: userId;
-      }
+  namespace Express {
+    interface Request {
+      userId?: string;
     }
+  }
 }
 
 declare module "jsonwebtoken" {
   export interface JwtPayload {
-    userId: userId;
+    userId: string;
   }
 }
+
 export {};

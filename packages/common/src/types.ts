@@ -1,9 +1,10 @@
 import { z } from "zod";
 
 export const UserSchema = z.object({
-  username: z.string(),
+  name: z.string(),
   email: z.string().email(),
   password: z.string(),
+  photo: z.string()
 });
 
 export const SignInSchema = z.object({
@@ -12,7 +13,7 @@ export const SignInSchema = z.object({
 });
 
 export const RoomSchema = z.object({
-  name: z.string()
+  slug: z.string()
 });
 
 export type User = z.infer<typeof UserSchema>;
