@@ -20,6 +20,17 @@ app.post("/signup", async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Email, password and username are required" });
   }  
 
+  try{
+    const existingUser = await prismaclient.user.findFirst({
+      where: { email },
+    });
+    if (existingUser) {
+      return res.status(400).json({ error: "User already exists" });
+    }
+  } catch (error) {
+    return res.status(400).json({ error: "User creation failed" });
+  }
+
   const user = await prismaclient.user.create({
     data: { email, password, name, photo },
   });
