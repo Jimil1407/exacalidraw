@@ -21,24 +21,13 @@ app.post("/signup", async (req: Request, res: Response) => {
   }  
 
   try{
-    const existingUser = await prismaclient.user.findFirst({
-      where: { email },
-    });
-    if (existingUser) {
-      return res.status(400).json({ error: "User already exists" });
-    }
-  } catch (error) {
-    return res.status(400).json({ error: "User creation failed" });
-  }
-
   const user = await prismaclient.user.create({
     data: { email, password, name, photo },
   });
-  if (!user) {
-    return res.status(400).json({ error: "User creation failed" });
+  res.status(200).json({ message: "User created successfully", id: user.id });
+  } catch (error) {
+    return res.status(400).json({ error: "User creation failed", reason: error instanceof Error ? error.message : "Unknown error" });
   }
-
-  res.status(200).json({ message: "User created successfully" });
 });
 
 app.post("/signin", async (req: Request, res: Response) => {
