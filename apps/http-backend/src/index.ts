@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { request, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { authMiddleware } from "./middleware";
 import { JWT_SECRET } from "@repo/backend-common/config";
@@ -85,6 +85,23 @@ app.post(
     res.status(200).json({ message: "Room created successfully" , roomId : room.id});
   }
 );
+
+app.get("/chats/:roomId",authMiddleware, async (req: Request , res: Response) => {
+
+  const roomId = Number(req.params.roomId);
+  const messages = await prismaclient.chat.findMany({
+    where:{
+      roomId : roomId
+    },
+    orderBy:{
+      id: "desc"
+    },
+    take: 50
+  })
+  res.json({
+    messages
+  })
+})
 
 app.listen(3002, () => {
   console.log("Server is running on port 3002");
