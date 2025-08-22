@@ -86,12 +86,12 @@ wss.on("connection", (ws: WebSocket, request) => {
 
       if (parseddata.type == "chat") {
         const roomId = parseddata.roomId;
-        const message = parseddata.message;
+        const message1 = parseddata.message;
 
         await prismaclient.chat.create({
           data:{
           roomId,
-          message,
+          message: message1,
           userId: id
           } 
         })
@@ -100,7 +100,7 @@ wss.on("connection", (ws: WebSocket, request) => {
             user.ws.send(
               JSON.stringify({
                 type: "chat",
-                message: message,
+                message: message1,
                 roomId,
               })
             );

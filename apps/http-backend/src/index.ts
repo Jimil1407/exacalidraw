@@ -65,7 +65,6 @@ app.post("/signin", async (req: Request, res: Response) => {
 
 app.post(
   "/create-room",
-  authMiddleware,
   async (req: Request & { userId?: string }, res: Response) => {
     const data = req.body;
     if (!data) {
@@ -86,9 +85,11 @@ app.post(
   }
 );
 
-app.get("/chats/:roomId",authMiddleware, async (req: Request , res: Response) => {
-
+app.get("/chats/:roomId", async (req: Request , res: Response) => {
   const roomId = Number(req.params.roomId);
+  if(Number.isNaN(roomId) || roomId <= 0){
+    return res.status(400).json({ error: "Invalid roomId" })
+  }
   const messages = await prismaclient.chat.findMany({
     where:{
       roomId : roomId
@@ -103,7 +104,7 @@ app.get("/chats/:roomId",authMiddleware, async (req: Request , res: Response) =>
   })
 })
 
-app.get("room/:slug", async (req: Request, res: Response) => {
+app.get("/room/:slug", async (req: Request, res: Response) => {
   const slug = String(req.params.slug);
   const room = await prismaclient.room.findFirst({
     where:{
