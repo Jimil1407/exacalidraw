@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Button } from "@/components/ui";
+import { Button } from "../../../packages/ui/src";
 
 export default function Home() {
   return (

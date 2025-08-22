@@ -2,14 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button, Input } from "./ui";
+import { Button, Input } from "../../../packages/ui/src";
 import { HTTP_URL } from "@/app/config";
 
 export function Authpage({ isSignin }: { isSignin: boolean }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [photo, setPhoto] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -20,7 +19,7 @@ export function Authpage({ isSignin }: { isSignin: boolean }) {
 
     try {
       const endpoint = isSignin ? `${HTTP_URL}/signin` : `${HTTP_URL}/signup`;
-      const body = isSignin ? { email, password } : { email, password, name, photo };
+      const body = isSignin ? { email, password } : { email, password, name };
 
       const response = await fetch(endpoint, {
         method: "POST",
