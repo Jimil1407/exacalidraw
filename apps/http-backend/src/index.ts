@@ -6,9 +6,11 @@ import { UserSchema } from "@repo/common/types";
 import { SignInSchema } from "@repo/common/types";
 import { RoomSchema } from "@repo/common/types";
 import { prismaclient } from "@repo/db/client";
+import cors from "cors";
 const app = express();
 
 app.use(express.json());
+app.use(cors());
 
 app.post("/signup", async (req: Request, res: Response) => {
   const data = req.body;
