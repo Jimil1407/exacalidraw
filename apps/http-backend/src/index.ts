@@ -103,6 +103,18 @@ app.get("/chats/:roomId",authMiddleware, async (req: Request , res: Response) =>
   })
 })
 
+app.get("room/:slug", async (req: Request, res: Response) => {
+  const slug = String(req.params.slug);
+  const room = await prismaclient.room.findFirst({
+    where:{
+      slug: slug
+    }
+  });
+  res.json({
+    room
+  })
+})
+
 app.listen(3002, () => {
   console.log("Server is running on port 3002");
   console.log("http://localhost:3002");
