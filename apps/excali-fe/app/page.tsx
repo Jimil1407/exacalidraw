@@ -22,7 +22,7 @@ export default function Home() {
           </Link>
           <Link href="/signup">
             <Button variant="primary">
-              Get Started w me
+              Get Started
             </Button>
           </Link>
         </div>
@@ -156,7 +156,7 @@ export default function Home() {
             </span>
           </div>
           <p className="text-gray-400">
-            © 2024 ExcaliDraw. Built with ❤️ for creators everywhere.
+            © 2024 ExcaliDraw. Built by Jimil for creators everywhere.
           </p>
         </div>
       </footer>
