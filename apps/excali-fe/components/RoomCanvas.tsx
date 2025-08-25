@@ -24,9 +24,15 @@ export default function RoomCanvas({ slug }: { slug: string }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const canvasref = useRef<HTMLCanvasElement>(null);
-    const toolRef = useRef<"rect" | "circle" | "line" | "ellipse" | "triangle" | "arrow" | "eraser">("rect");
-    const [tool, setTool] = useState<"rect" | "circle" | "line" | "ellipse" | "triangle" | "arrow" | "eraser">("rect");
+    const toolRef = useRef<"rect" | "circle" | "line" | "ellipse" | "triangle" | "arrow" | "eraser" | "text" | "select">("rect");
+    const [tool, setTool] = useState<"rect" | "circle" | "line" | "ellipse" | "triangle" | "arrow" | "eraser" | "text" | "select">("rect");
     const [socket, setSocket] = useState<WebSocket | null>(null);
+    const [textOverlay, setTextOverlay] = useState<{ x: number; y: number; w?: number; h?: number } | null>(null);
+    const [textValue, setTextValue] = useState("");
+    const toolbarRef = useRef<HTMLDivElement>(null);
+    const measureRef = useRef<HTMLSpanElement>(null);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
+    const [textStart, setTextStart] = useState<{ x: number; y: number } | null>(null);
 
     // Fetch room by slug
     useEffect(() => {
@@ -68,7 +74,7 @@ export default function RoomCanvas({ slug }: { slug: string }) {
 
     useEffect(() => {
         if (!socket || !roomId) return;
-        draw(canvasref, roomId, socket, toolRef);
+        draw(canvasref, roomId, socket, toolRef as unknown as React.RefObject<"rect" | "circle" | "line" | "ellipse" | "triangle" | "arrow" | "eraser" | "text">);
     },[socket, roomId])
 
     useEffect(() => {
@@ -103,6 +109,7 @@ export default function RoomCanvas({ slug }: { slug: string }) {
     <div
       style={{ position: "fixed", top: 16, left: "50%", transform: "translateX(-50%)" }}
       className="flex items-center gap-2 px-3 py-2 bg-black/80 border border-white/15 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-sm"
+      ref={toolbarRef}
     >
       <IconButton title="Rectangle" active={tool === "rect"} onClick={() => setTool("rect")}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><rect x="5" y="5" width="14" height="14"/></svg>
@@ -125,7 +132,117 @@ export default function RoomCanvas({ slug }: { slug: string }) {
       <IconButton title="Eraser" active={tool === "eraser"} onClick={() => setTool("eraser")}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M3 16 L10 9 L15 14 L8 21 H3 Z"/></svg>
       </IconButton>
+      <IconButton title="Text" active={tool === "text"} onClick={() => setTool("text")}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M4 6 H20 M12 6 V20"/></svg>
+      </IconButton>
+      <IconButton title="Select" active={tool === "select"} onClick={() => setTool("select")}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M4 4 L12 12 L8 12 L12 20"/></svg>
+      </IconButton>
     </div>
-    <canvas ref={canvasref} style={{ display: "block", width: "100vw", height: "100vh", cursor: tool === "eraser" ? "crosshair" : "default" }}></canvas>
+    <canvas
+      ref={canvasref}
+      style={{ display: "block", width: "100vw", height: "100vh", cursor: tool === "eraser" ? "crosshair" : (tool === "text" ? "text" : (tool === "select" ? "default" : "default")) }}
+      onMouseDown={(e) => {
+        if (toolRef.current !== "text" || !canvasref.current) return;
+        const rect = canvasref.current.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        setTextStart({ x, y });
+      }}
+      onMouseUp={(e) => {
+        if (toolRef.current !== "text" || !canvasref.current || !textStart) return;
+        const rect = canvasref.current.getBoundingClientRect();
+        let x2 = e.clientX - rect.left;
+        let y2 = e.clientY - rect.top;
+        // normalize rect
+        let x = Math.min(textStart.x, x2);
+        let y = Math.min(textStart.y, y2);
+        let w = Math.abs(x2 - textStart.x);
+        let h = Math.abs(y2 - textStart.y);
+        // minimum size
+        if (w < 24) w = 24;
+        if (h < 18) h = 18;
+        // clamp below toolbar
+        const toolbar = toolbarRef.current;
+        if (toolbar) {
+          const tRect = toolbar.getBoundingClientRect();
+          const minY = tRect.bottom - rect.top + 8;
+          if (y < minY) y = minY;
+        }
+        setTextOverlay({ x, y, w, h });
+        setTextValue("");
+        setTextStart(null);
+        setTimeout(() => inputRef.current?.focus(), 0);
+      }}
+      onMouseMove={(e) => {
+        if (toolRef.current !== "select" || !canvasref.current) return;
+        const rect = canvasref.current.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const ctx = canvasref.current.getContext("2d");
+        if (!ctx) return;
+        // ask draw module heuristics here is heavy; we’ll set cursor heuristically from position relative to toolbar for now
+        // The precise handle detection is implemented in draw; for UX give a generic nwse-resize when near edges under toolbar
+        const nearHandle = false; // placeholder (cursor controlled better inside draw with outlines)
+        (e.currentTarget as HTMLCanvasElement).style.cursor = nearHandle ? "nwse-resize" : "default";
+      }}
+    ></canvas>
+    {textOverlay && (
+      <>
+        {/* hidden measurer for dynamic width/height */}
+        <span
+          ref={measureRef}
+          style={{
+            position: "fixed",
+            left: "-9999px",
+            top: "-9999px",
+            whiteSpace: "pre",
+            font: "16px Inter, Arial, sans-serif",
+            lineHeight: "18px",
+          }}
+        >{textValue || " "}</span>
+        <textarea
+          ref={inputRef}
+          value={textValue}
+          onChange={(e) => {
+            setTextValue(e.target.value);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              const payload = { type: "text", x: textOverlay.x, y: textOverlay.y, text: textValue.trim() };
+              if (payload.text) {
+                socket?.send(JSON.stringify({ type: "chat", roomId, message: JSON.stringify(payload) }));
+              }
+              setTextOverlay(null);
+              setTextValue("");
+            } else if (e.key === "Escape") {
+              setTextOverlay(null);
+              setTextValue("");
+            }
+          }}
+          style={{
+            position: "fixed",
+            left: `${textOverlay.x}px`,
+            top: `${textOverlay.y}px`,
+            background: "transparent",
+            color: "white",
+            border: "1px solid rgba(255,255,255,0.3)",
+            padding: "2px 4px",
+            outline: "none",
+            minWidth: "24px",
+            width: `${Math.min(Math.max(Math.max((measureRef.current?.offsetWidth || 0) + 8, (textOverlay.w ?? 24)), 24), window.innerWidth - textOverlay.x - 8)}px`,
+            font: "16px Inter, Arial, sans-serif",
+            lineHeight: "18px",
+            height: "18px",
+            resize: "none",
+            overflow: "hidden",
+            whiteSpace: "pre",
+            zIndex: 30,
+          }}
+          rows={1}
+        />
+      </>
+    )}
   </div>;
 }

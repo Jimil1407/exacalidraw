@@ -33,6 +33,10 @@ type Shape = {
     type: "arrow"
     x1: number; y1: number;
     x2: number; y2: number;
+} | {
+    type: "text"
+    x: number; y: number;
+    text: string;
 }
 
 type ChatShape = { id: number; shape: Shape };
@@ -41,7 +45,7 @@ export const draw = async (
     canvasref: React.RefObject<HTMLCanvasElement | null>,
     roomId: number,
     socket: WebSocket,
-    toolRef?: React.RefObject<"rect" | "circle" | "line" | "ellipse" | "triangle" | "arrow" | "eraser">,
+    toolRef?: React.RefObject<"rect" | "circle" | "line" | "ellipse" | "triangle" | "arrow" | "eraser" | "text">,
 ) => {
 
     const shapes = await getShapes(roomId);
@@ -58,6 +62,15 @@ export const draw = async (
             const idx = existingshapes.findIndex(s => s.id === chatId);
             if (idx !== -1) {
                 existingshapes.splice(idx, 1);
+                redrawAll();
+            }
+        }
+        if (message.type === "update") {
+            const chatId: number = message.chatId;
+            const payload = JSON.parse(message.message) as Shape;
+            const idx = existingshapes.findIndex(s => s.id === chatId);
+            if (idx !== -1) {
+                existingshapes[idx].shape = payload;
                 redrawAll();
             }
         }
@@ -108,12 +121,95 @@ export const draw = async (
 
     let isDrawing = false;
     let startX = 0, startY = 0;
+    // selection drag state
+    let isDragging = false;
+    let dragTargetIndex: number = -1;
+    let dragMode: "move" | "resize" | null = null;
+    let dragStartMouseX = 0;
+    let dragStartMouseY = 0;
+    let dragOriginal: Shape | null = null;
+    let dragChatId: number | null = null;
 
     const onMouseDown = (e: MouseEvent) => {
         const rect = canvas.getBoundingClientRect();
         startX = e.clientX - rect.left;
         startY = e.clientY - rect.top;
+        const currentTool = (toolRef?.current as any) || "rect";
+        if (currentTool === "text") {
+            isDrawing = false;
+            return;
+        } else if (currentTool === "select") {
+            // Determine target and start drag immediately
+            dragTargetIndex = -1;
+            dragMode = null;
+            for (let i = existingshapes.length - 1; i >= 0; i--) {
+                const s = existingshapes[i].shape;
+                let hit = false;
+                if (s.type === "rect") {
+                    const rx = s.x + s.width;
+                    const ry = s.y + s.height;
+                    if (Math.abs(startX - rx) <= 8 && Math.abs(startY - ry) <= 8) {
+                        dragTargetIndex = i; dragMode = "resize"; break;
+                    }
+                    hit = pointInRect(startX, startY, s);
+                } else if (s.type === "circle") hit = pointInCircle(startX, startY, s);
+                else if (s.type === "line") hit = pointOnLine(startX, startY, s);
+                else if (s.type === "ellipse") hit = pointInEllipse(startX, startY, s);
+                else if (s.type === "triangle") hit = pointInTriangle(startX, startY, s);
+                else if (s.type === "arrow") hit = pointOnLine(startX, startY, s);
+                else if (s.type === "text") hit = pointInText(startX, startY, ctx, s);
+                if (hit) { dragTargetIndex = i; dragMode = dragMode ?? "move"; break; }
+            }
+            if (dragTargetIndex !== -1 && dragMode) {
+                isDragging = true;
+                dragStartMouseX = startX;
+                dragStartMouseY = startY;
+                dragOriginal = JSON.parse(JSON.stringify(existingshapes[dragTargetIndex].shape));
+                dragChatId = existingshapes[dragTargetIndex].id;
+                window.addEventListener("mousemove", onDragMove);
+                window.addEventListener("mouseup", onDragUp);
+            }
+            isDrawing = false;
+            return;
+        }
         isDrawing = true;
+    };
+    const onDragMove = (me: MouseEvent) => {
+        if (!isDragging || dragTargetIndex === -1 || !dragMode || !dragOriginal) return;
+        const r = canvas.getBoundingClientRect();
+        const mx = me.clientX - r.left;
+        const my = me.clientY - r.top;
+        const dx = mx - dragStartMouseX;
+        const dy = my - dragStartMouseY;
+        let updated: Shape = dragOriginal as any;
+        if (dragMode === "move") {
+            if (updated.type === "rect" || updated.type === "circle" || updated.type === "ellipse" || updated.type === "text") {
+                updated = { ...(dragOriginal as any), x: (dragOriginal as any).x + dx, y: (dragOriginal as any).y + dy } as any;
+            } else if (updated.type === "line" || updated.type === "arrow") {
+                updated = { ...(dragOriginal as any), x1: (dragOriginal as any).x1 + dx, y1: (dragOriginal as any).y1 + dy, x2: (dragOriginal as any).x2 + dx, y2: (dragOriginal as any).y2 + dy } as any;
+            } else if (updated.type === "triangle") {
+                updated = { ...(dragOriginal as any), x1: (dragOriginal as any).x1 + dx, y1: (dragOriginal as any).y1 + dy, x2: (dragOriginal as any).x2 + dx, y2: (dragOriginal as any).y2 + dy, x3: (dragOriginal as any).x3 + dx, y3: (dragOriginal as any).y3 + dy } as any;
+            }
+        } else if (dragMode === "resize" && dragOriginal.type === "rect") {
+            updated = { ...dragOriginal, width: Math.max(1, dragOriginal.width + dx), height: Math.max(1, dragOriginal.height + dy) };
+        }
+        existingshapes[dragTargetIndex].shape = updated;
+        redrawAll();
+    };
+
+    const onDragUp = () => {
+        if (!isDragging) return;
+        window.removeEventListener("mousemove", onDragMove);
+        window.removeEventListener("mouseup", onDragUp);
+        if (dragTargetIndex !== -1 && dragChatId != null) {
+            const payload = JSON.stringify(existingshapes[dragTargetIndex].shape);
+            socket.send(JSON.stringify({ type: "update", roomId, chatId: dragChatId, message: payload }));
+        }
+        isDragging = false;
+        dragTargetIndex = -1;
+        dragMode = null;
+        dragOriginal = null;
+        dragChatId = null;
     };
 
     const onMouseUp = (e: MouseEvent) => {
@@ -136,6 +232,7 @@ export const draw = async (
                 else if (s.type === "ellipse") hit = pointInEllipse(currX, currY, s);
                 else if (s.type === "triangle") hit = pointInTriangle(currX, currY, s);
                 else if (s.type === "arrow") hit = pointOnLine(currX, currY, s);
+                else if (s.type === "text") hit = pointInText(currX, currY, ctx, s);
                 if (hit) { hitIndex = i; break; }
             }
             if (hitIndex !== -1) {
@@ -148,9 +245,115 @@ export const draw = async (
             }
             isDrawing = false;
             return;
+        } else if ((tool as any) === "select") {
+            // Move selected if clicked inside, resize if near corner (rect only for now)
+            let targetIndex = -1;
+            let mode: "move" | "resize" | "resize_p1" | "resize_p2" | "resize_v1" | "resize_v2" | "resize_v3" | null = null;
+            for (let i = existingshapes.length - 1; i >= 0; i--) {
+                const s = existingshapes[i].shape;
+                let hit = false;
+                if (s.type === "rect") {
+                    // check resize handle bottom-right 8x8
+                    const rx = s.x + s.width;
+                    const ry = s.y + s.height;
+                    if (Math.abs(currX - rx) <= 8 && Math.abs(currY - ry) <= 8) {
+                        targetIndex = i; mode = "resize"; break;
+                    }
+                    hit = pointInRect(currX, currY, s);
+                } else if (s.type === "circle") {
+                    // resize handle at bottom-right of circle bounds
+                    const hx = s.x + s.radius;
+                    const hy = s.y + s.radius;
+                    if (Math.hypot(currX - hx, currY - hy) <= 8) { targetIndex = i; mode = "resize"; break; }
+                    hit = pointInCircle(currX, currY, s);
+                } else if (s.type === "ellipse") {
+                    const hx = s.x + s.rx;
+                    const hy = s.y + s.ry;
+                    if (Math.hypot(currX - hx, currY - hy) <= 8) { targetIndex = i; mode = "resize"; break; }
+                    hit = pointInEllipse(currX, currY, s);
+                } else if (s.type === "line" || s.type === "arrow") {
+                    if (Math.hypot(currX - (s as any).x1, currY - (s as any).y1) <= 8) { targetIndex = i; mode = "resize_p1"; break; }
+                    if (Math.hypot(currX - (s as any).x2, currY - (s as any).y2) <= 8) { targetIndex = i; mode = "resize_p2"; break; }
+                    hit = pointOnLine(currX, currY, s as any);
+                } else if (s.type === "triangle") {
+                    if (Math.hypot(currX - (s as any).x1, currY - (s as any).y1) <= 8) { targetIndex = i; mode = "resize_v1"; break; }
+                    if (Math.hypot(currX - (s as any).x2, currY - (s as any).y2) <= 8) { targetIndex = i; mode = "resize_v2"; break; }
+                    if (Math.hypot(currX - (s as any).x3, currY - (s as any).y3) <= 8) { targetIndex = i; mode = "resize_v3"; break; }
+                    hit = pointInTriangle(currX, currY, s as any);
+                } else if (s.type === "text") hit = pointInText(currX, currY, ctx, s);
+                if (hit) { targetIndex = i; mode = mode ?? "move"; break; }
+            }
+            if (targetIndex !== -1 && mode) {
+                const startMouseX = currX;
+                const startMouseY = currY;
+                const original = JSON.parse(JSON.stringify(existingshapes[targetIndex].shape)) as Shape;
+                const chatId = existingshapes[targetIndex].id;
+                const onMove = (me: MouseEvent) => {
+                    const r = canvas.getBoundingClientRect();
+                    const mx = me.clientX - r.left;
+                    const my = me.clientY - r.top;
+                    const dx = mx - startMouseX;
+                    const dy = my - startMouseY;
+                    let updated: Shape = original;
+                    if (mode === "move") {
+                        if (updated.type === "rect") { updated = { ...updated, x: (original as any).x + dx, y: (original as any).y + dy } as any; }
+                        else if (updated.type === "circle") { updated = { ...updated, x: (original as any).x + dx, y: (original as any).y + dy } as any; }
+                        else if (updated.type === "ellipse") { updated = { ...updated, x: (original as any).x + dx, y: (original as any).y + dy } as any; }
+                        else if (updated.type === "line" || updated.type === "arrow") { updated = { ...(original as any), x1: (original as any).x1 + dx, y1: (original as any).y1 + dy, x2: (original as any).x2 + dx, y2: (original as any).y2 + dy } as any; }
+                        else if (updated.type === "triangle") { updated = { ...(original as any), x1: (original as any).x1 + dx, y1: (original as any).y1 + dy, x2: (original as any).x2 + dx, y2: (original as any).y2 + dy, x3: (original as any).x3 + dx, y3: (original as any).y3 + dy } as any; }
+                        else if (updated.type === "text") { updated = { ...updated, x: (original as any).x + dx, y: (original as any).y + dy } as any; }
+                    } else if (mode === "resize") {
+                        if (original.type === "rect") {
+                            updated = { ...original, width: Math.max(1, original.width + dx), height: Math.max(1, original.height + dy) };
+                        } else if (original.type === "circle") {
+                            const newRadius = Math.max(1, Math.hypot(mx - original.x, my - original.y));
+                            updated = { ...original, radius: newRadius } as any;
+                        } else if (original.type === "ellipse") {
+                            const newRx = Math.max(1, Math.abs(mx - original.x));
+                            const newRy = Math.max(1, Math.abs(my - original.y));
+                            updated = { ...original, rx: newRx, ry: newRy } as any;
+                        }
+                    } else if (mode === "resize_p1" && (original.type === "line" || original.type === "arrow")) {
+                        updated = { ...(original as any), x1: (original as any).x1 + dx, y1: (original as any).y1 + dy } as any;
+                    } else if (mode === "resize_p2" && (original.type === "line" || original.type === "arrow")) {
+                        updated = { ...(original as any), x2: (original as any).x2 + dx, y2: (original as any).y2 + dy } as any;
+                    } else if (mode === "resize_v1" && original.type === "triangle") {
+                        updated = { ...(original as any), x1: (original as any).x1 + dx, y1: (original as any).y1 + dy } as any;
+                    } else if (mode === "resize_v2" && original.type === "triangle") {
+                        updated = { ...(original as any), x2: (original as any).x2 + dx, y2: (original as any).y2 + dy } as any;
+                    } else if (mode === "resize_v3" && original.type === "triangle") {
+                        updated = { ...(original as any), x3: (original as any).x3 + dx, y3: (original as any).y3 + dy } as any;
+                    }
+                    existingshapes[targetIndex].shape = updated;
+                    redrawAll();
+                };
+                const onUp = () => {
+                    window.removeEventListener("mousemove", onMove);
+                    window.removeEventListener("mouseup", onUp);
+                    // persist update
+                    const payload = JSON.stringify(existingshapes[targetIndex].shape);
+                    socket.send(JSON.stringify({ type: "update", roomId, chatId, message: payload }));
+                };
+                window.addEventListener("mousemove", onMove);
+                window.addEventListener("mouseup", onUp);
+            }
+            isDrawing = false;
+            return;
         }
         let newShape: Shape | null = null;
-        if (tool === "rect") {
+        if (tool === "text") {
+            const content = window.prompt("Enter text:")?.trim();
+            if (content) {
+                const newShape: Shape = { type: "text", x: currX, y: currY, text: content };
+                socket.send(JSON.stringify({
+                    type: "chat",
+                    roomId: roomId,
+                    message: JSON.stringify(newShape)
+                }));
+            }
+            isDrawing = false;
+            return;
+        } else if (tool === "rect") {
             newShape = { type: "rect", x: startX, y: startY, width, height };
         } else if (tool === "circle") {
             const radius = Math.hypot(width, height);
@@ -167,11 +370,11 @@ export const draw = async (
             newShape = { type: "arrow", x1: startX, y1: startY, x2: currX, y2: currY };
         }
         if (newShape) {
-            socket.send(JSON.stringify({
-                type: "chat",
+        socket.send(JSON.stringify({
+            type: "chat",
                 roomId: roomId,
                 message: JSON.stringify(newShape)
-            }));
+        }));  
         }
         isDrawing = false;
     };
@@ -183,7 +386,7 @@ export const draw = async (
         
         if (!isDrawing) {
             // Show hover effect for eraser
-            const tool = toolRef?.current || "rect";
+            const tool = (toolRef?.current as any) || "rect";
             if (tool === "eraser") {
                 redrawAll();
                 // Highlight the shape under cursor
@@ -196,6 +399,7 @@ export const draw = async (
                     else if (s.type === "ellipse") hit = pointInEllipse(currX, currY, s);
                     else if (s.type === "triangle") hit = pointInTriangle(currX, currY, s);
                     else if (s.type === "arrow") hit = pointOnLine(currX, currY, s);
+                    else if (s.type === "text") hit = pointInText(currX, currY, ctx, s);
                     if (hit) {
                         // Draw red outline around the shape that will be deleted
                         ctx.strokeStyle = "red";
@@ -227,10 +431,44 @@ export const draw = async (
                             ctx.moveTo(s.x1, s.y1);
                             ctx.lineTo(s.x2, s.y2);
                             ctx.stroke();
+                        } else if (s.type === "text") {
+                            ctx.strokeStyle = "red";
+                            ctx.lineWidth = 2;
+                            ctx.font = "16px Inter, Arial, sans-serif";
+                            ctx.textBaseline = "top";
+                            const metrics = ctx.measureText(s.text);
+                            const width = metrics.width;
+                            const height = 18;
+                            ctx.strokeRect(s.x - 2, s.y - 2, width + 4, height + 4);
                         }
                         break;
                     }
                 }
+            } else if (tool === "select") {
+                // change cursor if near resize handles for better affordance
+                let showResize = false;
+                for (let i = existingshapes.length - 1; i >= 0; i--) {
+                    const s = existingshapes[i].shape as Shape;
+                    if (s.type === "rect") {
+                        const rx = s.x + s.width;
+                        const ry = s.y + s.height;
+                        if (Math.abs(currX - rx) <= 8 && Math.abs(currY - ry) <= 8) { showResize = true; break; }
+                    } else if (s.type === "circle") {
+                        const hx = s.x + s.radius; const hy = s.y + s.radius;
+                        if (Math.hypot(currX - hx, currY - hy) <= 8) { showResize = true; break; }
+                    } else if (s.type === "ellipse") {
+                        const hx = s.x + s.rx; const hy = s.y + s.ry;
+                        if (Math.hypot(currX - hx, currY - hy) <= 8) { showResize = true; break; }
+                    } else if (s.type === "line" || s.type === "arrow") {
+                        if (Math.hypot(currX - (s as any).x1, currY - (s as any).y1) <= 8) { showResize = true; break; }
+                        if (Math.hypot(currX - (s as any).x2, currY - (s as any).y2) <= 8) { showResize = true; break; }
+                    } else if (s.type === "triangle") {
+                        if (Math.hypot(currX - (s as any).x1, currY - (s as any).y1) <= 8) { showResize = true; break; }
+                        if (Math.hypot(currX - (s as any).x2, currY - (s as any).y2) <= 8) { showResize = true; break; }
+                        if (Math.hypot(currX - (s as any).x3, currY - (s as any).y3) <= 8) { showResize = true; break; }
+                    }
+                }
+                canvas.style.cursor = showResize ? "nwse-resize" : "default";
             }
             return;
         }
@@ -358,6 +596,16 @@ function clearCanvas(existingshapes: ChatShape[], ctx: CanvasRenderingContext2D,
             ctx.lineTo(shape.x2 - headLen * Math.cos(angle + Math.PI / 6), shape.y2 - headLen * Math.sin(angle + Math.PI / 6));
             ctx.stroke();
         }
+        if (shape.type === "text") {
+            ctx.fillStyle = "white";
+            ctx.font = "16px Inter, Arial, sans-serif";
+            ctx.textBaseline = "top";
+            const lines = shape.text.split("\n");
+            const lineHeight = 18;
+            lines.forEach((line, idx) => {
+                ctx.fillText(line, shape.x, shape.y + idx * lineHeight);
+            });
+        }
     });
 }
 
@@ -376,7 +624,7 @@ function pointInCircle(x: number, y: number, shape: Extract<Shape, { type: "circ
     return distance <= shape.radius;
 }
 
-function pointOnLine(x: number, y: number, shape: Extract<Shape, { type: "line" | "arrow" }>, tolerance = 3): boolean {
+function pointOnLine(x: number, y: number, shape: Extract<Shape, { type: "line" | "arrow" }>, tolerance = 6): boolean {
     const { x1, y1, x2, y2 } = shape;
     const A = x - x1;
     const B = y - y1;
@@ -414,6 +662,16 @@ function pointInTriangle(x: number, y: number, shape: Extract<Shape, { type: "tr
     const w = 1 - u - v;
     
     return u >= 0 && v >= 0 && w >= 0;
+}
+
+function pointInText(x: number, y: number, ctx: CanvasRenderingContext2D, shape: Extract<Shape, { type: "text" }>): boolean {
+    ctx.font = "16px Inter, Arial, sans-serif";
+    ctx.textBaseline = "top";
+    const lines = shape.text.split("\n");
+    const lineHeight = 18;
+    const maxWidth = Math.max(...lines.map(line => ctx.measureText(line).width), 0);
+    const totalHeight = Math.max(lineHeight, lines.length * lineHeight);
+    return x >= shape.x && x <= shape.x + maxWidth && y >= shape.y && y <= shape.y + totalHeight;
 }
 
 // helper predicates used inside draw(); kept at module scope

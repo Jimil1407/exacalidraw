@@ -110,6 +110,31 @@ wss.on("connection", (ws: WebSocket, request) => {
         });
       }
 
+      if (parseddata.type == "update") {
+        const roomId = parseddata.roomId;
+        const chatId: number = parseddata.chatId;
+        const message1: string = parseddata.message;
+        try {
+          const updated = await prismaclient.chat.update({
+            where: { id: chatId },
+            data: { message: message1 }
+          });
+          users.forEach((user) => {
+            if (user.rooms.includes(roomId.toString())) {
+              user.ws.send(
+                JSON.stringify({
+                  type: "update",
+                  roomId,
+                  chatId: updated.id,
+                  message: updated.message
+                })
+              );
+            }
+          });
+        } catch (e) {
+          // ignore if missing
+        }
+      }
       if (parseddata.type == "erase") {
         const roomId = parseddata.roomId;
         const chatId: number = parseddata.chatId;
