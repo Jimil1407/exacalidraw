@@ -70,8 +70,8 @@ wss.on("connection", (ws: WebSocket, request) => {
 
       if (parseddata.type == "join_room") {
         const user = users.find((x) => x.ws === ws);
-        if (user && !user.rooms.includes(parseddata.roomId)) {
-          user.rooms.push(parseddata.roomId);
+        if (user && !user.rooms.includes(parseddata.roomId.toString())) {
+          user.rooms.push(parseddata.roomId.toString());
           console.log(`User ${user.userId} joined room ${parseddata.roomId}`);
         }
       }
@@ -79,7 +79,7 @@ wss.on("connection", (ws: WebSocket, request) => {
       if (parseddata.type == "leave_room") {
         const user = users.find((x) => x.ws === ws);
         if (user) {
-          user.rooms = user.rooms.filter((x) => x !== parseddata.roomId);
+          user.rooms = user.rooms.filter((x) => x !== parseddata.roomId.toString());
           console.log(`User ${user.userId} left room ${parseddata.roomId}`);
         }
       }
@@ -90,13 +90,14 @@ wss.on("connection", (ws: WebSocket, request) => {
 
         await prismaclient.chat.create({
           data:{
-          roomId,
-          message: message1,
-          userId: id
+            roomId,
+            message: message1,
+            userId: id
           } 
-        })
+        });
+        
         users.forEach((user) => {
-          if (user.rooms.includes(roomId)) {
+          if (user.rooms.includes(roomId.toString())) {
             user.ws.send(
               JSON.stringify({
                 type: "chat",

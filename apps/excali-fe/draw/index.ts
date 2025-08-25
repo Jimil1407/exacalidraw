@@ -1,3 +1,6 @@
+import axios from "axios";
+import { BACKEND_URL } from "../config";
+
 type Shape = {
     type: "rect"
     x: number;
@@ -32,12 +35,24 @@ type Shape = {
     x2: number; y2: number;
 }
 
-export const draw = (
+export const draw = async (
     canvasref: React.RefObject<HTMLCanvasElement | null>,
-    toolRef?: React.RefObject<"rect" | "circle" | "line" | "ellipse" | "triangle" | "arrow">
+    roomId: number,
+    socket: WebSocket,
+    toolRef?: React.RefObject<"rect" | "circle" | "line" | "ellipse" | "triangle" | "arrow">,
 ) => {
 
-    let existingshapes: Shape[] = [];
+    const shapes = await getShapes(roomId);
+    const existingshapes = shapes as Shape[];
+    socket.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        if(message.type === "chat") {
+            const shape = JSON.parse(message.message);
+            existingshapes.push(shape);
+            redrawAll();
+        }
+    };
+
     if (!canvasref.current) return;
     const canvas = canvasref.current;
     const ctx = canvas.getContext("2d");
@@ -133,6 +148,14 @@ export const draw = (
         }
         // Redraw all finalized shapes
         redrawAll();
+        // axios.post(`${BACKEND_URL}/chats/${roomId}`, {
+        //     message: JSON.stringify(existingshapes[existingshapes.length - 1])
+        // });
+        socket.send(JSON.stringify({
+            type: "chat",
+            roomId: roomId,
+            message: JSON.stringify(existingshapes[existingshapes.length - 1])
+        }));  
         isDrawing = false;
     };
 
@@ -265,4 +288,16 @@ function clearCanvas(existingshapes: Shape[], ctx: CanvasRenderingContext2D, can
             ctx.stroke();
         }
     });
+}
+
+async function getShapes(roomId: number) {
+    const response = await axios.get(`${BACKEND_URL}/chats/${roomId}`);
+    const messages = response.data.messages;
+
+
+    const shapes = messages.map((x: {message: string}) => {
+        const shape = JSON.parse(x.message);
+        return shape;
+    });
+    return shapes;
 }

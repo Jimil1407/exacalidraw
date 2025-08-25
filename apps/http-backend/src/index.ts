@@ -108,11 +108,29 @@ app.get("/chats/:roomId", async (req: Request , res: Response) => {
 
 app.get("/room/:slug", async (req: Request, res: Response) => {
   const slug = String(req.params.slug);
-  const room = await prismaclient.room.findFirst({
+  let room = await prismaclient.room.findFirst({
     where:{
       slug: slug
     }
   });
+  
+  // If room doesn't exist, create it
+  if (!room) {
+    // For now, we'll create with a default admin user
+    // In a real app, you'd get the user from the session/token
+    const defaultUser = await prismaclient.user.findFirst();
+    if (!defaultUser) {
+      return res.status(500).json({ error: "No users found in database" });
+    }
+    
+    room = await prismaclient.room.create({
+      data: {
+        slug: slug,
+        adminId: defaultUser.id
+      }
+    });
+  }
+  
   res.json({
     room
   })
