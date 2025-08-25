@@ -218,14 +218,7 @@ export function Authpage({ isSignin }: { isSignin: boolean }) {
         {/* Additional Info */}
         <div className="mt-8 text-center">
           <p className="text-gray-500 text-sm">
-            By continuing, you agree to our{" "}
-            <Link href="/terms" className="text-cyan-400 hover:text-cyan-300 transition-colors duration-200">
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link href="/privacy" className="text-cyan-400 hover:text-cyan-300 transition-colors duration-200">
-              Privacy Policy
-            </Link>
+            By continuing, you agree to our terms of service and privacy policy.
           </p>
         </div>
       </div>

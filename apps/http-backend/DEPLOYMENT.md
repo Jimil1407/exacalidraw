@@ -26,7 +26,7 @@
    - `PORT`: `3002` (Render will override this)
    - `DATABASE_URL`: Your Neon connection string
    - `JWT_SECRET`: Your generated JWT secret
-   - `FRONTEND_ORIGIN`: Your frontend URL (e.g., `https://your-app.vercel.app`)
+   - `FRONTEND_ORIGIN`: `https://exacalidraw-excali-fe.vercel.app`
 
 4. **Deploy**
    - Click "Create Web Service"
