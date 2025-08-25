@@ -124,7 +124,7 @@ export const draw = async (
     // selection drag state
     let isDragging = false;
     let dragTargetIndex: number = -1;
-    let dragMode: "move" | "resize" | null = null;
+    let dragMode: "move" | null = null;
     let dragStartMouseX = 0;
     let dragStartMouseY = 0;
     let dragOriginal: Shape | null = null;
@@ -146,11 +146,6 @@ export const draw = async (
                 const s = existingshapes[i].shape;
                 let hit = false;
                 if (s.type === "rect") {
-                    const rx = s.x + s.width;
-                    const ry = s.y + s.height;
-                    if (Math.abs(startX - rx) <= 8 && Math.abs(startY - ry) <= 8) {
-                        dragTargetIndex = i; dragMode = "resize"; break;
-                    }
                     hit = pointInRect(startX, startY, s);
                 } else if (s.type === "circle") hit = pointInCircle(startX, startY, s);
                 else if (s.type === "line") hit = pointOnLine(startX, startY, s);
@@ -246,41 +241,18 @@ export const draw = async (
             isDrawing = false;
             return;
         } else if ((tool as any) === "select") {
-            // Move selected if clicked inside, resize if near corner (rect only for now)
+            // Move selected if clicked inside
             let targetIndex = -1;
-            let mode: "move" | "resize" | "resize_p1" | "resize_p2" | "resize_v1" | "resize_v2" | "resize_v3" | null = null;
+            let mode: "move" | null = null;
             for (let i = existingshapes.length - 1; i >= 0; i--) {
                 const s = existingshapes[i].shape;
                 let hit = false;
-                if (s.type === "rect") {
-                    // check resize handle bottom-right 8x8
-                    const rx = s.x + s.width;
-                    const ry = s.y + s.height;
-                    if (Math.abs(currX - rx) <= 8 && Math.abs(currY - ry) <= 8) {
-                        targetIndex = i; mode = "resize"; break;
-                    }
-                    hit = pointInRect(currX, currY, s);
-                } else if (s.type === "circle") {
-                    // resize handle at bottom-right of circle bounds
-                    const hx = s.x + s.radius;
-                    const hy = s.y + s.radius;
-                    if (Math.hypot(currX - hx, currY - hy) <= 8) { targetIndex = i; mode = "resize"; break; }
-                    hit = pointInCircle(currX, currY, s);
-                } else if (s.type === "ellipse") {
-                    const hx = s.x + s.rx;
-                    const hy = s.y + s.ry;
-                    if (Math.hypot(currX - hx, currY - hy) <= 8) { targetIndex = i; mode = "resize"; break; }
-                    hit = pointInEllipse(currX, currY, s);
-                } else if (s.type === "line" || s.type === "arrow") {
-                    if (Math.hypot(currX - (s as any).x1, currY - (s as any).y1) <= 8) { targetIndex = i; mode = "resize_p1"; break; }
-                    if (Math.hypot(currX - (s as any).x2, currY - (s as any).y2) <= 8) { targetIndex = i; mode = "resize_p2"; break; }
-                    hit = pointOnLine(currX, currY, s as any);
-                } else if (s.type === "triangle") {
-                    if (Math.hypot(currX - (s as any).x1, currY - (s as any).y1) <= 8) { targetIndex = i; mode = "resize_v1"; break; }
-                    if (Math.hypot(currX - (s as any).x2, currY - (s as any).y2) <= 8) { targetIndex = i; mode = "resize_v2"; break; }
-                    if (Math.hypot(currX - (s as any).x3, currY - (s as any).y3) <= 8) { targetIndex = i; mode = "resize_v3"; break; }
-                    hit = pointInTriangle(currX, currY, s as any);
-                } else if (s.type === "text") hit = pointInText(currX, currY, ctx, s);
+                if (s.type === "rect") hit = pointInRect(currX, currY, s);
+                else if (s.type === "circle") hit = pointInCircle(currX, currY, s);
+                else if (s.type === "ellipse") hit = pointInEllipse(currX, currY, s);
+                else if (s.type === "line" || s.type === "arrow") hit = pointOnLine(currX, currY, s as any);
+                else if (s.type === "triangle") hit = pointInTriangle(currX, currY, s as any);
+                else if (s.type === "text") hit = pointInText(currX, currY, ctx, s);
                 if (hit) { targetIndex = i; mode = mode ?? "move"; break; }
             }
             if (targetIndex !== -1 && mode) {
@@ -302,27 +274,6 @@ export const draw = async (
                         else if (updated.type === "line" || updated.type === "arrow") { updated = { ...(original as any), x1: (original as any).x1 + dx, y1: (original as any).y1 + dy, x2: (original as any).x2 + dx, y2: (original as any).y2 + dy } as any; }
                         else if (updated.type === "triangle") { updated = { ...(original as any), x1: (original as any).x1 + dx, y1: (original as any).y1 + dy, x2: (original as any).x2 + dx, y2: (original as any).y2 + dy, x3: (original as any).x3 + dx, y3: (original as any).y3 + dy } as any; }
                         else if (updated.type === "text") { updated = { ...updated, x: (original as any).x + dx, y: (original as any).y + dy } as any; }
-                    } else if (mode === "resize") {
-                        if (original.type === "rect") {
-                            updated = { ...original, width: Math.max(1, original.width + dx), height: Math.max(1, original.height + dy) };
-                        } else if (original.type === "circle") {
-                            const newRadius = Math.max(1, Math.hypot(mx - original.x, my - original.y));
-                            updated = { ...original, radius: newRadius } as any;
-                        } else if (original.type === "ellipse") {
-                            const newRx = Math.max(1, Math.abs(mx - original.x));
-                            const newRy = Math.max(1, Math.abs(my - original.y));
-                            updated = { ...original, rx: newRx, ry: newRy } as any;
-                        }
-                    } else if (mode === "resize_p1" && (original.type === "line" || original.type === "arrow")) {
-                        updated = { ...(original as any), x1: (original as any).x1 + dx, y1: (original as any).y1 + dy } as any;
-                    } else if (mode === "resize_p2" && (original.type === "line" || original.type === "arrow")) {
-                        updated = { ...(original as any), x2: (original as any).x2 + dx, y2: (original as any).y2 + dy } as any;
-                    } else if (mode === "resize_v1" && original.type === "triangle") {
-                        updated = { ...(original as any), x1: (original as any).x1 + dx, y1: (original as any).y1 + dy } as any;
-                    } else if (mode === "resize_v2" && original.type === "triangle") {
-                        updated = { ...(original as any), x2: (original as any).x2 + dx, y2: (original as any).y2 + dy } as any;
-                    } else if (mode === "resize_v3" && original.type === "triangle") {
-                        updated = { ...(original as any), x3: (original as any).x3 + dx, y3: (original as any).y3 + dy } as any;
                     }
                     existingshapes[targetIndex].shape = updated;
                     redrawAll();
@@ -444,31 +395,6 @@ export const draw = async (
                         break;
                     }
                 }
-            } else if (tool === "select") {
-                // change cursor if near resize handles for better affordance
-                let showResize = false;
-                for (let i = existingshapes.length - 1; i >= 0; i--) {
-                    const s = existingshapes[i].shape as Shape;
-                    if (s.type === "rect") {
-                        const rx = s.x + s.width;
-                        const ry = s.y + s.height;
-                        if (Math.abs(currX - rx) <= 8 && Math.abs(currY - ry) <= 8) { showResize = true; break; }
-                    } else if (s.type === "circle") {
-                        const hx = s.x + s.radius; const hy = s.y + s.radius;
-                        if (Math.hypot(currX - hx, currY - hy) <= 8) { showResize = true; break; }
-                    } else if (s.type === "ellipse") {
-                        const hx = s.x + s.rx; const hy = s.y + s.ry;
-                        if (Math.hypot(currX - hx, currY - hy) <= 8) { showResize = true; break; }
-                    } else if (s.type === "line" || s.type === "arrow") {
-                        if (Math.hypot(currX - (s as any).x1, currY - (s as any).y1) <= 8) { showResize = true; break; }
-                        if (Math.hypot(currX - (s as any).x2, currY - (s as any).y2) <= 8) { showResize = true; break; }
-                    } else if (s.type === "triangle") {
-                        if (Math.hypot(currX - (s as any).x1, currY - (s as any).y1) <= 8) { showResize = true; break; }
-                        if (Math.hypot(currX - (s as any).x2, currY - (s as any).y2) <= 8) { showResize = true; break; }
-                        if (Math.hypot(currX - (s as any).x3, currY - (s as any).y3) <= 8) { showResize = true; break; }
-                    }
-                }
-                canvas.style.cursor = showResize ? "nwse-resize" : "default";
             }
             return;
         }

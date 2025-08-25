@@ -174,18 +174,7 @@ export default function RoomCanvas({ slug }: { slug: string }) {
         setTextStart(null);
         setTimeout(() => inputRef.current?.focus(), 0);
       }}
-      onMouseMove={(e) => {
-        if (toolRef.current !== "select" || !canvasref.current) return;
-        const rect = canvasref.current.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const ctx = canvasref.current.getContext("2d");
-        if (!ctx) return;
-        // ask draw module heuristics here is heavy; we’ll set cursor heuristically from position relative to toolbar for now
-        // The precise handle detection is implemented in draw; for UX give a generic nwse-resize when near edges under toolbar
-        const nearHandle = false; // placeholder (cursor controlled better inside draw with outlines)
-        (e.currentTarget as HTMLCanvasElement).style.cursor = nearHandle ? "nwse-resize" : "default";
-      }}
+      onMouseMove={undefined}
     ></canvas>
     {textOverlay && (
       <>
