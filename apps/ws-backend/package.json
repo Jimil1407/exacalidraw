@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node src/index.ts",
-    "dev": "pnpm run build && pnpm run start",
-    "build": "tsc -b "
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "build": "cd ../../packages/db && pnpm prisma generate && cd ../../apps/ws-backend && tsc -b"
   },
   "keywords": [],
   "author": "",

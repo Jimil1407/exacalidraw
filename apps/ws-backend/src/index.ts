@@ -3,8 +3,9 @@ import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import { prismaclient } from "@repo/db/client";
 
-const wss = new WebSocketServer({ port: 8080 });
-console.log("WebSocket server listening on ws://localhost:8080");
+const PORT = process.env.PORT || 8080;
+const wss = new WebSocketServer({ port: Number(PORT) });
+console.log(`WebSocket server listening on ws://localhost:${PORT}`);
 
 interface User {
   userId: string;
@@ -16,11 +17,11 @@ const users: User[] = [];
 
 function checkUser(token: string): string | null {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    if (typeof decoded == "string") {
+    if (!JWT_SECRET) {
+      console.error("JWT_SECRET not configured");
       return null;
     }
-
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
     if (!decoded || !decoded.userId) {
       return null;
     }

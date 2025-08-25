@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: excalidraw-api
+    name: excalidraw-ws
     env: node
     plan: free
     buildCommand: |
@@ -8,19 +8,16 @@ services:
       pnpm install
       cd packages/db
       pnpm prisma generate
-      cd ../../apps/http-backend
+      cd ../../apps/ws-backend
       pnpm build
     startCommand: |
-      cd /opt/render/project/src/packages/db && pnpm prisma migrate deploy && cd ../../apps/http-backend && pnpm start
+      cd /opt/render/project/src/apps/ws-backend
+      pnpm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 3002
-      - key: DATABASE_URL
-        sync: false
+        value: 8080
       - key: JWT_SECRET
         sync: false
-      - key: FRONTEND_ORIGIN
-        value: "*"
-    healthCheckPath: /health
+    healthCheckPath: /

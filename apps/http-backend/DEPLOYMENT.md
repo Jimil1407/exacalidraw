@@ -18,7 +18,7 @@
    - **Root Directory**: `apps/http-backend`
    - **Environment**: `Node`
    - **Build Command**: `pnpm install --frozen-lockfile && cd packages/db && pnpm prisma generate && cd ../../apps/http-backend && pnpm build`
-   - **Start Command**: `sh -c "cd ../../packages/db && pnpm prisma migrate deploy && cd ../../apps/http-backend && pnpm start"`
+   - **Start Command**: `cd packages/db && pnpm prisma migrate deploy && cd ../../apps/http-backend && pnpm start`
    - **Instance Type**: Free (or paid if needed)
 
 3. **Set Environment Variables**
