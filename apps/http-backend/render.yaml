@@ -12,7 +12,7 @@ services:
       pnpm build
     startCommand: |
       cd /opt/render/project/src/apps/http-backend
-      sh -c "pnpm prisma migrate deploy && pnpm start"
+      sh -c "cd ../../packages/db && pnpm prisma migrate deploy && cd ../../apps/http-backend && pnpm start"
     envVars:
       - key: NODE_ENV
         value: production
