@@ -30,10 +30,11 @@ export default function CreateRoomPage() {
         throw new Error("Room not found");
       }
 
-      // Create-or-redirect flow
+      // Create flow (show error if slug already exists instead of redirecting)
       const existing = await axios.get(`${BACKEND_URL}/room/${trimmed}`);
       if (existing.data?.room) {
-        window.location.href = `/canvas/${existing.data.room.slug}`;
+        setError("Room with this slug already exists");
+        setLoading(false);
         return;
       }
 
@@ -46,10 +47,20 @@ export default function CreateRoomPage() {
 
       throw new Error("Room not found after creation");
     } catch (err) {
+      // Surface backend 409 for duplicate slug
+      if (axios.isAxiosError(err)) {
+        const status = err.response?.status;
+        const msg = (err.response?.data as any)?.error;
+        if (status === 409) {
+          setError(msg || "Slug already exists");
+          setLoading(false);
+          return;
+        }
+      }
       setError(err instanceof Error ? err.message : "Failed to create/join room");
     } finally {
       setLoading(false);
-    }
+    } 
   };
 
   return (

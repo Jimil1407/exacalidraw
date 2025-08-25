@@ -77,6 +77,12 @@ app.post(
       return res.status(400).json({ error: "Slug is required" });
     }
 
+    // Block duplicate slugs
+    const existing = await prismaclient.room.findUnique({ where: { slug } });
+    if (existing) {
+      return res.status(409).json({ error: "Slug already exists" });
+    }
+
     const room = await prismaclient.room.create({
       data: { slug, adminId: String(req.userId) },
     });
