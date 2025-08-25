@@ -9,6 +9,7 @@ export default function CreateRoomPage() {
   const [slug, setSlug] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [mode, setMode] = useState<"create" | "join">("create");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -19,6 +20,17 @@ export default function CreateRoomPage() {
       const trimmed = slug.trim();
       if (!trimmed) throw new Error("Room name is required");
 
+      // Join-only flow
+      if (mode === "join") {
+        const existing = await axios.get(`${BACKEND_URL}/room/${trimmed}`);
+        if (existing.data?.room) {
+          window.location.href = `/canvas/${existing.data.room.slug}`;
+          return;
+        }
+        throw new Error("Room not found");
+      }
+
+      // Create-or-redirect flow
       const existing = await axios.get(`${BACKEND_URL}/room/${trimmed}`);
       if (existing.data?.room) {
         window.location.href = `/canvas/${existing.data.room.slug}`;
@@ -49,23 +61,45 @@ export default function CreateRoomPage() {
         </Link>
 
         <div className="bg-gray-900/50 border border-cyan-500/20 rounded-lg p-8 backdrop-blur-sm">
+          {/* Mode Toggle */}
+          <div className="mb-6 flex items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => setMode("create")}
+              className={`px-4 py-2 rounded-md text-sm font-medium border ${
+                mode === "create" ? "bg-cyan-600 text-black border-cyan-500" : "bg-transparent text-cyan-300 border-cyan-500/30 hover:border-cyan-500/60"
+              }`}
+            >
+              Create
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("join")}
+              className={`px-4 py-2 rounded-md text-sm font-medium border ${
+                mode === "join" ? "bg-cyan-600 text-black border-cyan-500" : "bg-transparent text-cyan-300 border-cyan-500/30 hover:border-cyan-500/60"
+              }`}
+            >
+              Join
+            </button>
+          </div>
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-gradient-to-r from-cyan-400 to-cyan-600 rounded-2xl mx-auto mb-4 flex items-center justify-center animate-pulse">
               <span className="text-2xl font-bold text-black">#</span>
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">Create or Join a Room</h1>
-            <p className="text-gray-400">Enter a room name (slug) to get started</p>
+            <h1 className="text-2xl font-bold text-white mb-2">{mode === "create" ? "Create a Room" : "Join a Room"}</h1>
+            <p className="text-gray-400">{mode === "create" ? "Pick a room name (slug) to create" : "Enter a room name (slug) to join"}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-3">
               <label htmlFor="slug" className="block text-gray-300 text-md font-medium">
-                Room Name<span className="text-red-400 ml-1">*</span>
+                {mode === "create" ? "Room Name" : "Room Slug"}
+                <span className="text-red-400 ml-1">*</span>
               </label>
               <input
                 id="slug"
                 type="text"
-                placeholder="e.g. design-sync"
+                placeholder={mode === "create" ? "e.g. design-sync" : "Enter existing room slug"}
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
                 required
@@ -80,12 +114,12 @@ export default function CreateRoomPage() {
             )}
 
             <Button type="submit" variant="primary" size="lg" loading={loading} className="w-full">
-              Continue
+              {mode === "create" ? "Create Room" : "Join Room"}
             </Button>
           </form>
 
           <div className="mt-6 text-center text-gray-500 text-sm">
-            Rooms help you collaborate and keep drawings organized.
+            {mode === "create" ? "Rooms help you collaborate and keep drawings organized." : "Ask the room creator for the exact slug to join."}
           </div>
         </div>
       </div>
