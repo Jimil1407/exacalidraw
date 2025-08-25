@@ -6,7 +6,9 @@ services:
     buildCommand: |
       cd /opt/render/project/src
       pnpm install
-      cd apps/http-backend
+      cd packages/db
+      pnpm prisma generate
+      cd ../../apps/http-backend
       pnpm build
     startCommand: |
       cd /opt/render/project/src/apps/http-backend

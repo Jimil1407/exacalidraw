@@ -69,6 +69,9 @@ app.post("/signin", async (req: Request, res: Response) => {
     return res.status(400).json({ error: "Invalid password" });
   }
 
+  if (!JWT_SECRET) {
+    return res.status(500).json({ error: "JWT_SECRET not configured" });
+  }
   const token = jwt.sign({ email, userId: user.id }, JWT_SECRET);
   res.status(200).json({ token });
 });

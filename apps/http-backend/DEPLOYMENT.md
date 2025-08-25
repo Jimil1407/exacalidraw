@@ -17,7 +17,7 @@
    - **Name**: `excalidraw-api` (or any name you prefer)
    - **Root Directory**: `apps/http-backend`
    - **Environment**: `Node`
-   - **Build Command**: `pnpm install && pnpm build`
+   - **Build Command**: `pnpm install --frozen-lockfile && cd packages/db && pnpm prisma generate && cd ../../apps/http-backend && pnpm build`
    - **Start Command**: `sh -c "pnpm prisma migrate deploy && pnpm start"`
    - **Instance Type**: Free (or paid if needed)
 
