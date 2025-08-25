@@ -70,19 +70,62 @@ export default function RoomCanvas({ slug, token }: { slug: string; token?: stri
         
         const t = token || authToken || "";
         if (!t) return;
-        const ws = new WebSocket(`${WS_URL}?token=${t}`);
-        ws.onopen = () => {
-            setSocket(ws);
-            ws.send(JSON.stringify({
-                type: "join_room",
-                roomId: roomId
-            }));
+
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        let reconnectTimeout: NodeJS.Timeout;
+
+        const connectWebSocket = () => {
+            try {
+                console.log('Attempting WebSocket connection to:', WS_URL);
+                const ws = new WebSocket(`${WS_URL}?token=${t}`);
+                
+                ws.onopen = () => {
+                    console.log('WebSocket connected');
+                    setSocket(ws);
+                    reconnectAttempts = 0;
+                    ws.send(JSON.stringify({
+                        type: "join_room",
+                        roomId: roomId
+                    }));
+                };
+
+                ws.onclose = (event) => {
+                    console.log('WebSocket closed:', event.code, event.reason);
+                    setSocket(null);
+                    
+                    // Attempt to reconnect if not a normal closure
+                    if (event.code !== 1000 && reconnectAttempts < maxReconnectAttempts) {
+                        reconnectAttempts++;
+                        console.log(`Reconnecting... Attempt ${reconnectAttempts}/${maxReconnectAttempts}`);
+                        reconnectTimeout = setTimeout(connectWebSocket, 1000 * reconnectAttempts);
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                };
+
+                return ws;
+            } catch (error) {
+                console.error('Failed to create WebSocket:', error);
+                return null;
+            }
         };
-        ws.onerror = () => {
-            try { ws.close(); } catch {}
-        };
+
+        const ws = connectWebSocket();
+
         return () => {
-            try { ws.close(); } catch {}
+            if (reconnectTimeout) {
+                clearTimeout(reconnectTimeout);
+            }
+            if (ws) {
+                try { 
+                    ws.close(1000, 'Component unmounting'); 
+                } catch (error) {
+                    console.error('Error closing WebSocket:', error);
+                }
+            }
         };
     }, [roomId, token, authToken]);
 
