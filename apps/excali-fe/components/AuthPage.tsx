@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "../../../packages/ui/src";
-import { HTTP_URL } from "@/app/config";
+import { BACKEND_URL } from "@/app/config";
 
 interface InputProps {
   id?: string;
@@ -97,7 +97,7 @@ export function Authpage({ isSignin }: { isSignin: boolean }) {
     setError("");
 
     try {
-      const endpoint = isSignin ? `${HTTP_URL}/signin` : `${HTTP_URL}/signup`;
+      const endpoint = isSignin ? `${BACKEND_URL}/signin` : `${BACKEND_URL}/signup`;
       const body = isSignin ? { email, password } : { email, password, name };
 
       const response = await fetch(endpoint, {
@@ -114,7 +114,7 @@ export function Authpage({ isSignin }: { isSignin: boolean }) {
 
       if (data.token) {
         localStorage.setItem("token", data.token);
-        window.location.href = "/dashboard";
+        window.location.href = "/rooms";
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
