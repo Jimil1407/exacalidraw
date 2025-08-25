@@ -88,7 +88,7 @@ wss.on("connection", (ws: WebSocket, request) => {
         const roomId = parseddata.roomId;
         const message1 = parseddata.message;
 
-        await prismaclient.chat.create({
+        const created = await prismaclient.chat.create({
           data:{
             roomId,
             message: message1,
@@ -103,10 +103,35 @@ wss.on("connection", (ws: WebSocket, request) => {
                 type: "chat",
                 message: message1,
                 roomId,
+                chatId: created.id
               })
             );
           }
         });
+      }
+
+      if (parseddata.type == "erase") {
+        const roomId = parseddata.roomId;
+        const chatId: number = parseddata.chatId;
+
+        if (typeof chatId === "number") {
+          try {
+            await prismaclient.chat.delete({ where: { id: chatId } });
+          } catch (e) {
+            // ignore if already deleted
+          }
+          users.forEach((user) => {
+            if (user.rooms.includes(roomId.toString())) {
+              user.ws.send(
+                JSON.stringify({
+                  type: "erase",
+                  roomId,
+                  chatId
+                })
+              );
+            }
+          });
+        }
       }
     } catch (error) {
       console.error("Error processing message:", error);

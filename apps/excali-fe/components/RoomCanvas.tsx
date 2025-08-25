@@ -24,8 +24,8 @@ export default function RoomCanvas({ slug }: { slug: string }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const canvasref = useRef<HTMLCanvasElement>(null);
-    const toolRef = useRef<"rect" | "circle" | "line" | "ellipse" | "triangle" | "arrow">("rect");
-    const [tool, setTool] = useState<"rect" | "circle" | "line" | "ellipse" | "triangle" | "arrow">("rect");
+    const toolRef = useRef<"rect" | "circle" | "line" | "ellipse" | "triangle" | "arrow" | "eraser">("rect");
+    const [tool, setTool] = useState<"rect" | "circle" | "line" | "ellipse" | "triangle" | "arrow" | "eraser">("rect");
     const [socket, setSocket] = useState<WebSocket | null>(null);
 
     // Fetch room by slug
@@ -122,7 +122,10 @@ export default function RoomCanvas({ slug }: { slug: string }) {
       <IconButton title="Arrow" active={tool === "arrow"} onClick={() => setTool("arrow")}>
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><path d="M16 9 L19 12 L16 15"/></svg>
       </IconButton>
+      <IconButton title="Eraser" active={tool === "eraser"} onClick={() => setTool("eraser")}>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M3 16 L10 9 L15 14 L8 21 H3 Z"/></svg>
+      </IconButton>
     </div>
-    <canvas ref={canvasref} style={{ display: "block", width: "100vw", height: "100vh" }}></canvas>
+    <canvas ref={canvasref} style={{ display: "block", width: "100vw", height: "100vh", cursor: tool === "eraser" ? "crosshair" : "default" }}></canvas>
   </div>;
 }
