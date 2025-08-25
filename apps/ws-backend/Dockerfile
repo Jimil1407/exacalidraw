@@ -49,4 +49,4 @@ WORKDIR /app/apps/ws-backend
 EXPOSE 8080
 
 # Start the application
-CMD ["node", "dist/index.js"]
+CMD ["pnpm", "run", "dev"]
