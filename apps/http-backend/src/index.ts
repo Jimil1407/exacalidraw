@@ -10,7 +10,15 @@ import cors from "cors";
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_ORIGIN || "*",
+  credentials: true
+}));
+
+// Health check endpoint for Render
+app.get("/health", (req: Request, res: Response) => {
+  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+});
 
 app.post("/signup", async (req: Request, res: Response) => {
   const data = req.body;
@@ -142,7 +150,7 @@ app.get("/room/:slug", async (req: Request, res: Response) => {
   })
 })
 
-app.listen(3002, () => {
-  console.log("Server is running on port 3002");
-  console.log("http://localhost:3002");
+app.listen(process.env.PORT || 3002, () => {
+  console.log(`Server is running on port ${process.env.PORT || 3002}`);
+  console.log(`http://localhost:${process.env.PORT || 3002}`);
 });
