@@ -53,21 +53,21 @@ export default function CreateRoomPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <Link href="/" className="inline-flex items-center text-cyan-400 hover:text-cyan-300 mb-8 transition-colors duration-200">
+    <div className="min-h-screen bg-gradient-to-b from-black via-[#0b0f15] to-black flex items-center justify-center p-6">
+      <div className="w-full max-w-xl">
+        <Link href="/" className="inline-flex items-center text-cyan-300 hover:text-cyan-200 mb-8 transition-colors duration-200">
           <span className="mr-2">←</span>
           Back to Home
         </Link>
 
-        <div className="bg-gray-900/50 border border-cyan-500/20 rounded-lg p-8 backdrop-blur-sm">
+        <div className="bg-gradient-to-br from-gray-900/60 to-gray-800/50 border border-white/10 rounded-2xl p-8 backdrop-blur-sm shadow-[0_8px_30px_rgb(0,0,0,0.2)]">
           {/* Mode Toggle */}
-          <div className="mb-6 flex items-center justify-center gap-2">
+          <div className="mb-6 flex items-center justify-center gap-3">
             <button
               type="button"
               onClick={() => setMode("create")}
-              className={`px-4 py-2 rounded-md text-sm font-medium border ${
-                mode === "create" ? "bg-cyan-600 text-black border-cyan-500" : "bg-transparent text-cyan-300 border-cyan-500/30 hover:border-cyan-500/60"
+              className={`px-5 py-2 rounded-md text-sm font-medium border ${
+                mode === "create" ? "bg-gradient-to-r from-cyan-500 to-cyan-600 text-black border-cyan-500" : "bg-transparent text-cyan-300 border-cyan-500/30 hover:border-cyan-500/60"
               }`}
             >
               Create
@@ -75,8 +75,8 @@ export default function CreateRoomPage() {
             <button
               type="button"
               onClick={() => setMode("join")}
-              className={`px-4 py-2 rounded-md text-sm font-medium border ${
-                mode === "join" ? "bg-cyan-600 text-black border-cyan-500" : "bg-transparent text-cyan-300 border-cyan-500/30 hover:border-cyan-500/60"
+              className={`px-5 py-2 rounded-md text-sm font-medium border ${
+                mode === "join" ? "bg-gradient-to-r from-cyan-500 to-cyan-600 text-black border-cyan-500" : "bg-transparent text-cyan-300 border-cyan-500/30 hover:border-cyan-500/60"
               }`}
             >
               Join
@@ -103,7 +103,7 @@ export default function CreateRoomPage() {
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
                 required
-                className="w-full px-6 py-4 text-lg bg-gray-800 border-2 text-white placeholder:text-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500 border-gray-600 focus:border-cyan-500"
+                className="w-full px-6 py-4 text-lg bg-black/40 border-2 text-white placeholder:text-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500 border-white/10 focus:border-cyan-500 rounded-lg"
               />
             </div>
 

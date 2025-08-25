@@ -21,7 +21,7 @@ export default function Home() {
             </Button>
           </Link>
           <Link href="/signup">
-            <Button variant="primary">
+            <Button variant="ghost">
               Get Started
             </Button>
           </Link>

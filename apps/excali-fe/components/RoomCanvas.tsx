@@ -1,5 +1,6 @@
 "use client"
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { draw } from "../draw";
 import { WS_URL, BACKEND_URL } from "../app/config";
 
@@ -19,7 +20,7 @@ const IconButton = ({
   </button>
 );
 
-export default function RoomCanvas({ slug }: { slug: string }) {
+export default function RoomCanvas({ slug, token }: { slug: string; token?: string }) {
     const [roomId, setRoomId] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -27,6 +28,7 @@ export default function RoomCanvas({ slug }: { slug: string }) {
     const toolRef = useRef<"rect" | "circle" | "line" | "ellipse" | "triangle" | "arrow" | "eraser" | "text" | "select">("rect");
     const [tool, setTool] = useState<"rect" | "circle" | "line" | "ellipse" | "triangle" | "arrow" | "eraser" | "text" | "select">("rect");
     const [socket, setSocket] = useState<WebSocket | null>(null);
+    const [authToken, setAuthToken] = useState<string>(token || "");
     const [textOverlay, setTextOverlay] = useState<{ x: number; y: number; w?: number; h?: number } | null>(null);
     const [textValue, setTextValue] = useState("");
     const toolbarRef = useRef<HTMLDivElement>(null);
@@ -54,9 +56,21 @@ export default function RoomCanvas({ slug }: { slug: string }) {
     }, [slug]);
 
     useEffect(() => {
+        // Load token from localStorage if not provided
+        if (!token) {
+            try {
+                const saved = localStorage.getItem("token") || "";
+                if (saved) setAuthToken(saved);
+            } catch {}
+        }
+    }, [token]);
+
+    useEffect(() => {
         if (!roomId) return;
         
-        const ws = new WebSocket(`${WS_URL}?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImppbUBnbWFpbC5jb20iLCJ1c2VySWQiOiI4MWY1MzNhNC1mNGVkLTQ5NmEtYTZlMi00OTFhNDcyNDI3N2EiLCJpYXQiOjE3NTYxMjA5NzV9.irtzgMwGY58v6Li8dzD3yzaWxy4tWqqbr2Ck5QkGUek`);
+        const t = token || authToken || "";
+        if (!t) return;
+        const ws = new WebSocket(`${WS_URL}?token=${t}`);
         ws.onopen = () => {
             setSocket(ws);
             ws.send(JSON.stringify({
@@ -70,7 +84,7 @@ export default function RoomCanvas({ slug }: { slug: string }) {
         return () => {
             try { ws.close(); } catch {}
         };
-    }, [roomId]);
+    }, [roomId, token, authToken]);
 
     useEffect(() => {
         if (!socket || !roomId) return;
@@ -106,6 +120,12 @@ export default function RoomCanvas({ slug }: { slug: string }) {
     }
 
   return <div style={{ width: "100vw", height: "100vh", background: "black" }}>
+    <div style={{ position: "fixed", top: 16, left: 16, zIndex: 40 }}>
+      <Link href="/rooms" className="inline-flex items-center gap-2 px-3 py-2 text-sm text-cyan-300 hover:text-cyan-200 bg-black/70 border border-white/15 rounded-full backdrop-blur-sm">
+        <span>←</span>
+        <span>Back</span>
+      </Link>
+    </div>
     <div
       style={{ position: "fixed", top: 16, left: "50%", transform: "translateX(-50%)" }}
       className="flex items-center gap-2 px-3 py-2 bg-black/80 border border-white/15 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-sm"
