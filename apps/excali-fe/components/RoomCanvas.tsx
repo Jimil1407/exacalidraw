@@ -172,10 +172,10 @@ export default function RoomCanvas({ slug, token }: { slug: string; token?: stri
       onMouseUp={(e) => {
         if (toolRef.current !== "text" || !canvasref.current || !textStart) return;
         const rect = canvasref.current.getBoundingClientRect();
-        let x2 = e.clientX - rect.left;
-        let y2 = e.clientY - rect.top;
+        const x2 = e.clientX - rect.left;
+        const y2 = e.clientY - rect.top;
         // normalize rect
-        let x = Math.min(textStart.x, x2);
+        const x = Math.min(textStart.x, x2);
         let y = Math.min(textStart.y, y2);
         let w = Math.abs(x2 - textStart.x);
         let h = Math.abs(y2 - textStart.y);

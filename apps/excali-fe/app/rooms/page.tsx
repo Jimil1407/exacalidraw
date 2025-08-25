@@ -50,7 +50,7 @@ export default function CreateRoomPage() {
       // Surface backend 409 for duplicate slug
       if (axios.isAxiosError(err)) {
         const status = err.response?.status;
-        const msg = (err.response?.data as any)?.error;
+        const msg = (err.response?.data as { error?: string })?.error;
         if (status === 409) {
           setError(msg || "Slug already exists");
           setLoading(false);
