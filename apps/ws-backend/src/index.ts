@@ -2,10 +2,28 @@ import WebSocket, { WebSocketServer } from "ws";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import { prismaclient } from "@repo/db/client";
+import http from "http";
 
 const PORT = process.env.PORT || 8080;
-const wss = new WebSocketServer({ port: Number(PORT) });
-console.log(`WebSocket server listening on ws://localhost:${PORT}`);
+
+// Create HTTP server for health checks
+const server = http.createServer((req, res) => {
+  if (req.url === "/" || req.url === "/health") {
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ status: "ok", service: "websocket", timestamp: new Date().toISOString() }));
+  } else {
+    res.writeHead(404);
+    res.end("Not Found");
+  }
+});
+
+// Create WebSocket server attached to HTTP server
+const wss = new WebSocketServer({ server });
+
+server.listen(PORT, () => {
+  console.log(`WebSocket server listening on ws://localhost:${PORT}`);
+  console.log(`HTTP server listening on http://localhost:${PORT}`);
+});
 
 interface User {
   userId: string;

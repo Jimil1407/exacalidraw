@@ -34,15 +34,16 @@
 
 ### Important Notes
 - **WebSocket Support**: Render supports WebSockets automatically
+- **HTTP Health Check**: Service includes HTTP endpoints for health checks
 - **URL Format**: Use `wss://` instead of `ws://` for production
 - **JWT_SECRET**: Must be identical to HTTP backend
 - **Database**: Uses the same Neon database as HTTP backend
 
 ### Testing
-After deployment, test the WebSocket connection:
-1. Get the service URL (e.g., `https://excalidraw-ws.onrender.com`)
-2. Convert to WebSocket URL: `wss://excalidraw-ws.onrender.com`
-3. Test connection with a valid JWT token
+After deployment, test the service:
+1. **Health Check**: `GET https://excalidraw-ws.onrender.com/health`
+2. **WebSocket**: Convert to WebSocket URL: `wss://excalidraw-ws.onrender.com`
+3. Test WebSocket connection with a valid JWT token
 
 ### Update Frontend
 Once deployed, update your frontend config:
