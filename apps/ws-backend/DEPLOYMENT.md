@@ -19,8 +19,8 @@
    - **Root Directory**: `apps/ws-backend`
    - **Environment**: `Node`
    - **Build Command**: `pnpm install --frozen-lockfile && cd packages/db && pnpm prisma generate && cd ../../apps/ws-backend && pnpm build`
-   - **Start Command**: `pnpm start`
-   - **Instance Type**: Free (or paid if needed)
+   - **Start Command**: `cd apps/ws-backend && pnpm start`
+   - **Instance Type**: Paid (recommended) - Free tier has memory limitations
 
 3. **Set Environment Variables**
    - `NODE_ENV`: `production`
@@ -53,6 +53,9 @@ export const WS_URL = process.env.NEXT_PUBLIC_WS_URL || "wss://excalidraw-ws.onr
 ```
 
 ### Troubleshooting
+- **Memory Issues**: If you get "Out of memory" errors, upgrade to a paid plan
+- **Wrong Start Command**: Ensure start command is `cd apps/ws-backend && pnpm start`, not `pnpm run dev`
+- **Port Detection**: Service should respond to health checks at `/health`
 - Check the logs in Render dashboard if deployment fails
 - Ensure JWT_SECRET matches HTTP backend
 - Verify WebSocket connection in browser console

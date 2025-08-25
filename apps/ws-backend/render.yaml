@@ -10,9 +10,7 @@ services:
       pnpm prisma generate
       cd ../../apps/ws-backend
       pnpm build
-    startCommand: |
-      cd /opt/render/project/src/apps/ws-backend
-      pnpm start
+    startCommand: cd /opt/render/project/src/apps/ws-backend && pnpm start
     envVars:
       - key: NODE_ENV
         value: production
