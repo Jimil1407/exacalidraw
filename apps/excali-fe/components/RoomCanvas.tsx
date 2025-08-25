@@ -77,11 +77,9 @@ export default function RoomCanvas({ slug, token }: { slug: string; token?: stri
 
         const connectWebSocket = () => {
             try {
-                console.log('Attempting WebSocket connection to:', WS_URL);
                 const ws = new WebSocket(`${WS_URL}?token=${t}`);
                 
                 ws.onopen = () => {
-                    console.log('WebSocket connected');
                     setSocket(ws);
                     reconnectAttempts = 0;
                     ws.send(JSON.stringify({
@@ -91,24 +89,21 @@ export default function RoomCanvas({ slug, token }: { slug: string; token?: stri
                 };
 
                 ws.onclose = (event) => {
-                    console.log('WebSocket closed:', event.code, event.reason);
                     setSocket(null);
                     
                     // Attempt to reconnect if not a normal closure
                     if (event.code !== 1000 && reconnectAttempts < maxReconnectAttempts) {
                         reconnectAttempts++;
-                        console.log(`Reconnecting... Attempt ${reconnectAttempts}/${maxReconnectAttempts}`);
                         reconnectTimeout = setTimeout(connectWebSocket, 1000 * reconnectAttempts);
                     }
                 };
 
                 ws.onerror = (error) => {
-                    console.error('WebSocket error:', error);
+                    // Handle error silently
                 };
 
                 return ws;
             } catch (error) {
-                console.error('Failed to create WebSocket:', error);
                 return null;
             }
         };
@@ -123,7 +118,7 @@ export default function RoomCanvas({ slug, token }: { slug: string; token?: stri
                 try { 
                     ws.close(1000, 'Component unmounting'); 
                 } catch (error) {
-                    console.error('Error closing WebSocket:', error);
+                    // Handle error silently
                 }
             }
         };

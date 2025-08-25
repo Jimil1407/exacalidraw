@@ -2,6 +2,12 @@
 
 import Link from "next/link";
 import { Button } from "../../../packages/ui/src";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "ExcaliDraw - Real-time Collaborative Drawing",
+  description: "Real-time collaborative drawing and whiteboarding platform. Create, share, and collaborate with your team in real-time.",
+};
 
 export default function Home() {
   return (
