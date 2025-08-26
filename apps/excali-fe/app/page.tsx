@@ -16,12 +16,12 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
           <Link href="/signin">
-            <Button variant="ghost">
+            <Button variant="ghost" size="sm" className="whitespace-nowrap">
               Sign In
             </Button>
           </Link>
           <Link href="/signup">
-            <Button variant="ghost">
+            <Button variant="ghost" size="sm" className="whitespace-nowrap">
               Get Started
             </Button>
           </Link>

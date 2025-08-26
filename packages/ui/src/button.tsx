@@ -59,14 +59,14 @@ export const Button = ({
       <span className="pointer-events-none absolute inset-0 rounded-xl bg-white/0 hover:bg-white/[0.02] transition-colors" />
 
       {/* content */}
-      <span className="relative z-10 inline-flex items-center gap-2">
+      <span className="relative z-10 inline-flex items-center gap-2 whitespace-nowrap">
         {loading && (
           <span className="inline-flex items-center justify-center">
             <span className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
           </span>
         )}
         {leftIcon && <span className="inline-flex items-center">{leftIcon}</span>}
-        <span>{children}</span>
+        <span className="whitespace-nowrap">{children}</span>
         {rightIcon && <span className="inline-flex items-center">{rightIcon}</span>}
       </span>
     </button>
