@@ -98,12 +98,12 @@ export default function RoomCanvas({ slug, token }: { slug: string; token?: stri
                     }
                 };
 
-                ws.onerror = (error) => {
+                ws.onerror = () => {
                     // Handle error silently
                 };
 
                 return ws;
-            } catch (error) {
+            } catch {
                 return null;
             }
         };
@@ -117,7 +117,7 @@ export default function RoomCanvas({ slug, token }: { slug: string; token?: stri
             if (ws) {
                 try { 
                     ws.close(1000, 'Component unmounting'); 
-                } catch (error) {
+                } catch {
                     // Handle error silently
                 }
             }
@@ -247,7 +247,7 @@ export default function RoomCanvas({ slug, token }: { slug: string; token?: stri
         const t = e.changedTouches[0];
         const x2 = t.clientX - rect.left;
         const y2 = t.clientY - rect.top;
-        let x = Math.min(textStart.x, x2);
+        const x = Math.min(textStart.x, x2);
         let y = Math.min(textStart.y, y2);
         let w = Math.abs(x2 - textStart.x);
         let h = Math.abs(y2 - textStart.y);
