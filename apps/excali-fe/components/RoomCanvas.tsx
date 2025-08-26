@@ -158,53 +158,61 @@ export default function RoomCanvas({ slug, token }: { slug: string; token?: stri
     }
 
   return <div style={{ width: "100vw", height: "100vh", background: "black" }}>
-    <div style={{ position: "fixed", top: 16, left: 16, zIndex: 40 }}>
-      <Link href="/rooms" className="inline-flex items-center gap-2 px-3 py-2 text-sm text-cyan-300 hover:text-cyan-200 bg-black/70 border border-white/15 rounded-full backdrop-blur-sm">
+    <div style={{ position: "fixed", top: "calc(env(safe-area-inset-top) + 12px)", left: 12, zIndex: 40 }}>
+      <Link href="/rooms" className="inline-flex items-center gap-2 px-3 py-2 text-xs sm:text-sm text-cyan-300 hover:text-cyan-200 bg-black/70 border border-white/15 rounded-full backdrop-blur-sm">
         <span>←</span>
         <span>Back</span>
       </Link>
     </div>
     <div
-      style={{ position: "fixed", top: 16, left: "50%", transform: "translateX(-50%)" }}
-      className="flex items-center gap-2 px-3 py-2 bg-black/80 border border-white/15 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-sm"
+      style={{ position: "fixed", top: "calc(env(safe-area-inset-top) + 12px)", left: "50%", transform: "translateX(-50%)" }}
+      className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-black/80 border border-white/15 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-sm overflow-x-auto max-w-[90vw]"
       ref={toolbarRef}
     >
       <IconButton title="Rectangle" active={tool === "rect"} onClick={() => setTool("rect")}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><rect x="5" y="5" width="14" height="14"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><rect x="5" y="5" width="14" height="14"/></svg>
       </IconButton>
       <IconButton title="Circle" active={tool === "circle"} onClick={() => setTool("circle")}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><circle cx="12" cy="12" r="7"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><circle cx="12" cy="12" r="7"/></svg>
       </IconButton>
       <IconButton title="Ellipse" active={tool === "ellipse"} onClick={() => setTool("ellipse")}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><ellipse cx="12" cy="12" rx="8" ry="5"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><ellipse cx="12" cy="12" rx="8" ry="5"/></svg>
       </IconButton>
       <IconButton title="Triangle" active={tool === "triangle"} onClick={() => setTool("triangle")}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M12 5 L19 19 L5 19 Z"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M12 5 L19 19 L5 19 Z"/></svg>
       </IconButton>
       <IconButton title="Line" active={tool === "line"} onClick={() => setTool("line")}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><line x1="5" y1="19" x2="19" y2="5"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><line x1="5" y1="19" x2="19" y2="5"/></svg>
       </IconButton>
       <IconButton title="Arrow" active={tool === "arrow"} onClick={() => setTool("arrow")}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><path d="M16 9 L19 12 L16 15"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><path d="M16 9 L19 12 L16 15"/></svg>
       </IconButton>
       <IconButton title="Eraser" active={tool === "eraser"} onClick={() => setTool("eraser")}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M3 16 L10 9 L15 14 L8 21 H3 Z"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M3 16 L10 9 L15 14 L8 21 H3 Z"/></svg>
       </IconButton>
       <IconButton title="Text" active={tool === "text"} onClick={() => setTool("text")}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M4 6 H20 M12 6 V20"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M4 6 H20 M12 6 V20"/></svg>
       </IconButton>
       <IconButton title="Select" active={tool === "select"} onClick={() => setTool("select")}>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M4 4 L12 12 L8 12 L12 20"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M4 4 L12 12 L8 12 L12 20"/></svg>
       </IconButton>
     </div>
     <canvas
       ref={canvasref}
-      style={{ display: "block", width: "100vw", height: "100vh", cursor: tool === "eraser" ? "crosshair" : (tool === "text" ? "text" : (tool === "select" ? "default" : "default")) }}
+      style={{ display: "block", width: "100vw", height: "100vh", touchAction: "none", cursor: tool === "eraser" ? "crosshair" : (tool === "text" ? "text" : (tool === "select" ? "default" : "default")) }}
       onMouseDown={(e) => {
         if (toolRef.current !== "text" || !canvasref.current) return;
         const rect = canvasref.current.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
+        setTextStart({ x, y });
+      }}
+      onTouchStart={(e) => {
+        if (toolRef.current !== "text" || !canvasref.current) return;
+        const t = e.touches[0];
+        const rect = canvasref.current.getBoundingClientRect();
+        const x = t.clientX - rect.left;
+        const y = t.clientY - rect.top;
         setTextStart({ x, y });
       }}
       onMouseUp={(e) => {
@@ -221,6 +229,30 @@ export default function RoomCanvas({ slug, token }: { slug: string; token?: stri
         if (w < 24) w = 24;
         if (h < 18) h = 18;
         // clamp below toolbar
+        const toolbar = toolbarRef.current;
+        if (toolbar) {
+          const tRect = toolbar.getBoundingClientRect();
+          const minY = tRect.bottom - rect.top + 8;
+          if (y < minY) y = minY;
+        }
+        setTextOverlay({ x, y, w, h });
+        setTextValue("");
+        setTextStart(null);
+        setTimeout(() => inputRef.current?.focus(), 0);
+      }}
+      onTouchEnd={(e) => {
+        if (toolRef.current !== "text" || !canvasref.current || !textStart) return;
+        const rect = canvasref.current.getBoundingClientRect();
+        // use changedTouches for end point
+        const t = e.changedTouches[0];
+        const x2 = t.clientX - rect.left;
+        const y2 = t.clientY - rect.top;
+        let x = Math.min(textStart.x, x2);
+        let y = Math.min(textStart.y, y2);
+        let w = Math.abs(x2 - textStart.x);
+        let h = Math.abs(y2 - textStart.y);
+        if (w < 24) w = 24;
+        if (h < 18) h = 18;
         const toolbar = toolbarRef.current;
         if (toolbar) {
           const tRect = toolbar.getBoundingClientRect();

@@ -32,9 +32,9 @@ const variants: Record<ButtonVariant, string> = {
 };
 
 const sizes: Record<ButtonSize, string> = {
-  sm: "h-9 px-4 text-sm",
-  md: "h-11 px-5 text-base",
-  lg: "h-12 px-6 text-lg",
+  sm: "h-9 px-3 sm:px-4 text-sm",
+  md: "h-11 px-4 sm:px-5 text-base",
+  lg: "h-12 px-5 sm:px-6 text-base sm:text-lg",
 };
 
 export const Button = ({

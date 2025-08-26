@@ -18,8 +18,8 @@ export function Card({
   const baseClasses = "block rounded-lg transition-all duration-300";
   
   const variantClasses = {
-    default: "bg-gray-900/50 border border-cyan-500/20 hover:border-cyan-500/40 p-6",
-    feature: "bg-gray-900/50 border border-cyan-500/20 hover:border-cyan-500/40 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/10 p-6"
+    default: "bg-gray-900/50 border border-cyan-500/20 hover:border-cyan-500/40 p-4 sm:p-6",
+    feature: "bg-gray-900/50 border border-cyan-500/20 hover:border-cyan-500/40 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/10 p-4 sm:p-6"
   };
 
   const classes = `${baseClasses} ${variantClasses[variant]} ${className}`;

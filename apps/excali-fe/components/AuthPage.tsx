@@ -31,7 +31,7 @@ function Input({
 
   const inputType = type === "password" && showPassword ? "text" : type;
 
-  const baseClasses = "w-full px-6 py-4 text-lg bg-gray-800 border-2 text-white placeholder:text-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500";
+  const baseClasses = "w-full px-4 sm:px-6 py-3 sm:py-4 text-base sm:text-lg bg-gray-800 border-2 text-white placeholder:text-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500";
   
   const stateClasses = isFocused 
     ? "border-cyan-500 focus:border-cyan-500" 
@@ -125,7 +125,7 @@ export function Authpage({ isSignin }: { isSignin: boolean }) {
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-sm sm:max-w-md">
         {/* Back to Home */}
         <Link href="/" className="inline-flex items-center text-cyan-400 hover:text-cyan-300 mb-8 transition-colors duration-200">
           <span className="mr-2">←</span>
@@ -133,7 +133,7 @@ export function Authpage({ isSignin }: { isSignin: boolean }) {
         </Link>
 
         {/* Auth Card */}
-        <div className="bg-gray-900/50 border border-cyan-500/20 rounded-lg p-8 backdrop-blur-sm">
+        <div className="bg-gray-900/50 border border-cyan-500/20 rounded-lg p-6 sm:p-8 backdrop-blur-sm">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-gradient-to-r from-cyan-400 to-cyan-600 rounded-2xl mx-auto mb-4 flex items-center justify-center animate-pulse">
               <span className="text-2xl font-bold text-black">

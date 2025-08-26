@@ -64,20 +64,20 @@ export default function CreateRoomPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black via-[#0b0f15] to-black flex items-center justify-center p-6">
-      <div className="w-full max-w-xl">
+    <div className="min-h-screen bg-gradient-to-b from-black via-[#0b0f15] to-black flex items-center justify-center p-4 sm:p-6">
+      <div className="w-full max-w-lg sm:max-w-xl">
         <Link href="/" className="inline-flex items-center text-cyan-300 hover:text-cyan-200 mb-8 transition-colors duration-200">
           <span className="mr-2">←</span>
           Back to Home
         </Link>
 
-        <div className="bg-gradient-to-br from-gray-900/60 to-gray-800/50 border border-white/10 rounded-2xl p-8 backdrop-blur-sm shadow-[0_8px_30px_rgb(0,0,0,0.2)]">
+        <div className="bg-gradient-to-br from-gray-900/60 to-gray-800/50 border border-white/10 rounded-2xl p-6 sm:p-8 backdrop-blur-sm shadow-[0_8px_30px_rgb(0,0,0,0.2)]">
           {/* Mode Toggle */}
-          <div className="mb-6 flex items-center justify-center gap-3">
+          <div className="mb-6 flex items-center justify-center gap-2 sm:gap-3">
             <button
               type="button"
               onClick={() => setMode("create")}
-              className={`px-5 py-2 rounded-md text-sm font-medium border ${
+              className={`px-4 sm:px-5 py-2 rounded-md text-sm font-medium border ${
                 mode === "create" ? "bg-gradient-to-r from-cyan-500 to-cyan-600 text-black border-cyan-500" : "bg-transparent text-cyan-300 border-cyan-500/30 hover:border-cyan-500/60"
               }`}
             >
@@ -86,7 +86,7 @@ export default function CreateRoomPage() {
             <button
               type="button"
               onClick={() => setMode("join")}
-              className={`px-5 py-2 rounded-md text-sm font-medium border ${
+              className={`px-4 sm:px-5 py-2 rounded-md text-sm font-medium border ${
                 mode === "join" ? "bg-gradient-to-r from-cyan-500 to-cyan-600 text-black border-cyan-500" : "bg-transparent text-cyan-300 border-cyan-500/30 hover:border-cyan-500/60"
               }`}
             >
@@ -101,7 +101,7 @@ export default function CreateRoomPage() {
             <p className="text-gray-400">{mode === "create" ? "Pick a room name (slug) to create" : "Enter a room name (slug) to join"}</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
             <div className="space-y-3">
               <label htmlFor="slug" className="block text-gray-300 text-md font-medium">
                 {mode === "create" ? "Room Name" : "Room Slug"}
@@ -114,7 +114,7 @@ export default function CreateRoomPage() {
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
                 required
-                className="w-full px-6 py-4 text-lg bg-black/40 border-2 text-white placeholder:text-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500 border-white/10 focus:border-cyan-500 rounded-lg"
+                className="w-full px-4 sm:px-6 py-3 sm:py-4 text-base sm:text-lg bg-black/40 border-2 text-white placeholder:text-gray-400 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500 border-white/10 focus:border-cyan-500 rounded-lg"
               />
             </div>
 
